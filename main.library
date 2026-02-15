@@ -1,0 +1,201 @@
+local NeverloseLibrary = {}
+
+-- Services
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local LocalPlayer = Players.LocalPlayer
+
+function NeverloseLibrary.CreateWindow()
+    -- Main UI
+    local Neverlose = Instance.new("ScreenGui")
+    Neverlose.Name = "Neverlose_V4"
+    Neverlose.ResetOnSpawn = false
+    Neverlose.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    -- Main Frame
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 650, 0, 400)
+    MainFrame.Position = UDim2.new(0.5, -325, 0.5, -200)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = Neverlose
+    MainFrame.Active = true -- ✅ REQUIRED FOR DRAG
+    local MainCorner = Instance.new("UICorner", MainFrame)
+    MainCorner.CornerRadius = UDim.new(0, 8)
+
+    -- Sidebar
+    local SideBar = Instance.new("Frame")
+    SideBar.Size = UDim2.new(0, 160, 1, 0)
+    SideBar.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+    SideBar.BorderSizePixel = 0
+    SideBar.Parent = MainFrame
+    local SideCorner = Instance.new("UICorner", SideBar)
+    SideCorner.CornerRadius = UDim.new(0, 8)
+
+    -- Title in Sidebar
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, 0, 0, 50)
+    TitleLabel.Position = UDim2.new(0, 0, 0, 10)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = "NEVERLOSE"
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 18
+    TitleLabel.Parent = SideBar
+
+    local SubTitle = Instance.new("TextLabel")
+    SubTitle.Size = UDim2.new(1, 0, 0, 20)
+    SubTitle.Position = UDim2.new(0, 0, 0, 35)
+    SubTitle.BackgroundTransparency = 1
+    SubTitle.Text = "<font color='rgb(220, 40, 40)'>V4</font>" -- 🔴 RED
+    SubTitle.RichText = true
+    SubTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SubTitle.Font = Enum.Font.GothamBold
+    SubTitle.TextSize = 14
+    SubTitle.Parent = SideBar
+
+    -- User Profile
+    local PfpFrame = Instance.new("Frame")
+    PfpFrame.Size = UDim2.new(0, 40, 0, 40)
+    PfpFrame.Position = UDim2.new(0.5, -20, 0, 70)
+    PfpFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    PfpFrame.Parent = SideBar
+    local PfpCorner = Instance.new("UICorner", PfpFrame)
+    PfpCorner.CornerRadius = UDim.new(1, 0)
+
+    local PfpLabel = Instance.new("ImageLabel")
+    PfpLabel.Size = UDim2.new(1, -4, 1, -4)
+    PfpLabel.Position = UDim2.new(0, 2, 0, 2)
+    PfpLabel.BackgroundTransparency = 1
+    PfpLabel.Image = "rbxthumb://type=AvatarHeadShot&id=" .. LocalPlayer.UserId .. "&w=150&h=150"
+    PfpLabel.Parent = PfpFrame
+    local PfpImageCorner = Instance.new("UICorner", PfpLabel)
+    PfpImageCorner.CornerRadius = UDim.new(1, 0)
+
+    local UserText = Instance.new("TextLabel")
+    UserText.Size = UDim2.new(1, 0, 0, 20)
+    UserText.Position = UDim2.new(0, 0, 0, 115)
+    UserText.BackgroundTransparency = 1
+    UserText.Text = LocalPlayer.Name
+    UserText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    UserText.Font = Enum.Font.GothamBold
+    UserText.TextSize = 12
+    UserText.TextTruncate = Enum.TextTruncate.AtEnd
+    UserText.Parent = SideBar
+
+    -- Tab List
+    local TabList = Instance.new("Frame")
+    TabList.Size = UDim2.new(1, 0, 1, -150)
+    TabList.Position = UDim2.new(0, 0, 0, 140)
+    TabList.BackgroundTransparency = 1
+    TabList.Parent = SideBar
+
+    local TabLayout = Instance.new("UIListLayout", TabList)
+    TabLayout.Padding = UDim.new(0, 5)
+    TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    -- Content Area
+    local ContentContainer = Instance.new("Frame")
+    ContentContainer.Size = UDim2.new(1, -170, 1, -20)
+    ContentContainer.Position = UDim2.new(0, 165, 0, 10)
+    ContentContainer.BackgroundTransparency = 1
+    ContentContainer.Parent = MainFrame
+
+    -- DRAG LOGIC (FIXED, SAME STRUCTURE)
+    local Dragging = false
+    local DragStart, StartPos
+
+    local function InputHandler(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = true
+            DragStart = Input.Position
+            StartPos = MainFrame.Position
+        end
+    end
+
+    local function MoveHandler(Input)
+        if Dragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
+            local Delta = Input.Position - DragStart
+            MainFrame.Position = UDim2.new(
+                StartPos.X.Scale,
+                StartPos.X.Offset + Delta.X,
+                StartPos.Y.Scale,
+                StartPos.Y.Offset + Delta.Y
+            )
+        end
+    end
+
+    local function EndHandler(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = false
+        end
+    end
+
+    MainFrame.InputBegan:Connect(InputHandler)
+    UserInputService.InputChanged:Connect(MoveHandler)
+    UserInputService.InputEnded:Connect(EndHandler)
+
+    local AllTabs = {}
+
+    -- Create Tab
+    local function CreateTab(Name)
+        local TabButton = Instance.new("TextButton")
+        TabButton.Size = UDim2.new(0.9, 0, 0, 35)
+        TabButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        TabButton.Text = Name
+        TabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        TabButton.Font = Enum.Font.GothamBold
+        TabButton.TextSize = 14
+        TabButton.AutoButtonColor = false
+        TabButton.Parent = TabList
+        local BtnCorner = Instance.new("UICorner", TabButton)
+        BtnCorner.CornerRadius = UDim.new(0, 6)
+
+        local ContentFrame = Instance.new("ScrollingFrame")
+        ContentFrame.Size = UDim2.new(1, 0, 1, 0)
+        ContentFrame.ScrollBarThickness = 4
+        ContentFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        ContentFrame.Visible = false
+        ContentFrame.Parent = ContentContainer
+        local ContentCorner = Instance.new("UICorner", ContentFrame)
+        ContentCorner.CornerRadius = UDim.new(0, 6)
+
+        local Padding = Instance.new("UIPadding", ContentFrame)
+        Padding.PaddingTop = UDim.new(0, 10)
+        Padding.PaddingLeft = UDim.new(0, 10)
+
+        local Layout = Instance.new("UIListLayout", ContentFrame)
+        Layout.Padding = UDim.new(0, 8)
+
+        ContentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, v in pairs(AllTabs) do
+                v.Frame.Visible = false
+                v.Button.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+            end
+            ContentFrame.Visible = true
+            TabButton.BackgroundColor3 = Color3.fromRGB(220, 40, 40) -- 🔴 RED
+        end)
+
+        table.insert(AllTabs, {Button = TabButton, Frame = ContentFrame})
+        return ContentFrame
+    end
+
+    -- Auto select first tab
+    task.defer(function()
+        if #AllTabs > 0 then
+            AllTabs[1].Frame.Visible = true
+            AllTabs[1].Button.BackgroundColor3 = Color3.fromRGB(220, 40, 40) -- 🔴 RED
+        end
+    end)
+
+    return {
+        CreateTab = CreateTab
+    }
+end
+
+return NeverloseLibrary
