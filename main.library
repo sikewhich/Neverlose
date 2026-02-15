@@ -1,4 +1,4 @@
-local NeverloseLibrary = {}
+local NeverloseLibrary = {} -- LOL
 
 -- Services
 local UIS = game:GetService("UserInputService")
@@ -10,7 +10,6 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 function NeverloseLibrary.CreateWindow()
-    -- Main UI
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "Neverlose_Pro"
     ScreenGui.ResetOnSpawn = false
@@ -46,13 +45,13 @@ function NeverloseLibrary.CreateWindow()
     Title.Size = UDim2.new(0, 250, 0, 40)
     Title.Position = UDim2.new(0, 160, 0, 15)
     Title.BackgroundTransparency = 1
-    Title.TextColor3 = Color3.new(1,1,1)
+    Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 24
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = MainFrame
 
-    -- Content Container
+    -- Content
     local ContentContainer = Instance.new("Frame")
     ContentContainer.Name = "ContentContainer"
     ContentContainer.Size = UDim2.new(1, -180, 1, -80)
@@ -60,57 +59,45 @@ function NeverloseLibrary.CreateWindow()
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = MainFrame
 
-    local TabContents = {} -- Store tab frames
+    local Tabs = {}
 
-    -----------------------------------------------------------
-    -- TAB FUNCTION
-    -----------------------------------------------------------
     local function CreateTab(name)
-        local TabButton = Instance.new("TextButton")
-        TabButton.Size = UDim2.new(0.85, 0, 0, 40)
-        TabButton.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-        TabButton.Text = name
-        TabButton.TextColor3 = Color3.new(1,1,1)
-        TabButton.Font = Enum.Font.GothamBold
-        TabButton.TextSize = 14
-        TabButton.AutoButtonColor = false
-        TabButton.Parent = SideBar
-        Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
+        local TabBtn = Instance.new("TextButton")
+        TabBtn.Size = UDim2.new(0.85, 0, 0, 40)
+        TabBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+        TabBtn.Text = name
+        TabBtn.TextColor3 = Color3.new(1, 1, 1)
+        TabBtn.Font = Enum.Font.GothamBold
+        TabBtn.TextSize = 14
+        TabBtn.AutoButtonColor = false
+        TabBtn.Parent = SideBar
+        Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
 
-        -- Create the content frame for this tab
         local Content = Instance.new("ScrollingFrame")
         Content.Name = name .. "Content"
         Content.Size = UDim2.new(1, 0, 1, 0)
         Content.CanvasSize = UDim2.new(0, 0, 0, 600)
         Content.ScrollBarThickness = 2
         Content.BackgroundTransparency = 1
-        Content.Visible = false -- Hidden by default
+        Content.Visible = false
         Content.Parent = ContentContainer
 
         local ContentLayout = Instance.new("UIListLayout", Content)
         ContentLayout.Padding = UDim.new(0, 20)
 
-        table.insert(TabContents, {Button = TabButton, Frame = Content})
-
-        -- Switch tab logic
-        TabButton.MouseButton1Click:Connect(function()
-            for _, v in pairs(TabContents) do
+        TabBtn.MouseButton1Click:Connect(function()
+            for _, v in pairs(Tabs) do
                 v.Frame.Visible = false
-                v.Button.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+                v.Btn.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
             end
             Content.Visible = true
-            TabButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+            TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
         end)
 
-        -- Return the content frame so we can add elements to it
+        table.insert(Tabs, {Btn = TabBtn, Frame = Content})
         return Content
     end
 
-    -----------------------------------------------------------
-    -- ELEMENT FUNCTIONS
-    -----------------------------------------------------------
-    
-    -- Toggle
     local function CreateToggle(name, parent, callback)
         local Button = Instance.new("TextButton")
         Button.Size = UDim2.new(0, 300, 0, 30)
@@ -122,7 +109,7 @@ function NeverloseLibrary.CreateWindow()
         Label.Text = name
         Label.Size = UDim2.new(1, -50, 1, 0)
         Label.BackgroundTransparency = 1
-        Label.TextColor3 = Color3.new(1,1,1)
+        Label.TextColor3 = Color3.new(1, 1, 1)
         Label.Font = Enum.Font.GothamBold
         Label.TextSize = 14
         Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -131,7 +118,7 @@ function NeverloseLibrary.CreateWindow()
         local Box = Instance.new("Frame")
         Box.Size = UDim2.new(0, 22, 0, 22)
         Box.Position = UDim2.new(1, -30, 0.5, -11)
-        Box.BackgroundColor3 = Color3.fromRGB(30,30,35)
+        Box.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         Box.Parent = Button
         Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 5)
 
@@ -139,13 +126,12 @@ function NeverloseLibrary.CreateWindow()
         Button.MouseButton1Click:Connect(function()
             enabled = not enabled
             TweenService:Create(Box, TweenInfo.new(0.15), {
-                BackgroundColor3 = enabled and Color3.fromRGB(0,170,255) or Color3.fromRGB(30,30,35)
+                BackgroundColor3 = enabled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(30, 30, 35)
             }):Play()
             callback(enabled)
         end)
     end
 
-    -- Slider
     local function CreateSlider(name, min, max, default, parent, callback)
         local Frame = Instance.new("Frame")
         Frame.Size = UDim2.new(0, 300, 0, 55)
@@ -156,7 +142,7 @@ function NeverloseLibrary.CreateWindow()
         Label.Text = name .. ": " .. default
         Label.Size = UDim2.new(1, 0, 0, 20)
         Label.BackgroundTransparency = 1
-        Label.TextColor3 = Color3.new(1,1,1)
+        Label.TextColor3 = Color3.new(1, 1, 1)
         Label.Font = Enum.Font.GothamBold
         Label.TextSize = 13
         Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -165,14 +151,14 @@ function NeverloseLibrary.CreateWindow()
         local Back = Instance.new("Frame")
         Back.Size = UDim2.new(1, 0, 0, 6)
         Back.Position = UDim2.new(0, 0, 0, 35)
-        Back.BackgroundColor3 = Color3.fromRGB(30,30,35)
+        Back.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         Back.BorderSizePixel = 0
         Back.Parent = Frame
         Instance.new("UICorner", Back)
 
         local Fill = Instance.new("Frame")
-        Fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
-        Fill.BackgroundColor3 = Color3.fromRGB(0,170,255)
+        Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        Fill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
         Fill.BorderSizePixel = 0
         Fill.Parent = Back
         Instance.new("UICorner", Fill)
@@ -214,100 +200,35 @@ function NeverloseLibrary.CreateWindow()
         end)
     end
 
-    -- Button
-    local function CreateButton(name, parent, callback)
-        local Btn = Instance.new("TextButton")
-        Btn.Size = UDim2.new(0, 300, 0, 35)
-        Btn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-        Btn.Text = name
-        Btn.TextColor3 = Color3.new(1,1,1)
-        Btn.Font = Enum.Font.GothamBold
-        Btn.TextSize = 14
-        Btn.AutoButtonColor = false
-        Btn.Parent = parent
-        Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-
-        Btn.MouseButton1Click:Connect(callback)
-    end
-
-    -- Label
-    local function CreateLabel(text, parent)
-        local Label = Instance.new("TextLabel")
-        Label.Text = text
-        Label.Size = UDim2.new(0, 300, 0, 20)
-        Label.BackgroundTransparency = 1
-        Label.TextColor3 = Color3.fromRGB(200, 200, 200)
-        Label.Font = Enum.Font.Gotham
-        Label.TextSize = 13
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-        Label.Parent = parent
-        return Label
-    end
-
-    -- Keybind
-    local function CreateKeybind(name, defaultKey, parent, callback)
+    local function CreateDropdown(name, list, parent, callback)
         local Frame = Instance.new("Frame")
         Frame.Size = UDim2.new(0, 300, 0, 30)
         Frame.BackgroundTransparency = 1
         Frame.Parent = parent
 
         local Label = Instance.new("TextLabel")
-        Label.Text = name
-        Label.Size = UDim2.new(1, -80, 1, 0)
+        Label.Text = name .. ": " .. list[1]
+        Label.Size = UDim2.new(1, 0, 1, 0)
         Label.BackgroundTransparency = 1
-        Label.TextColor3 = Color3.new(1,1,1)
+        Label.TextColor3 = Color3.new(1, 1, 1)
         Label.Font = Enum.Font.GothamBold
         Label.TextSize = 14
         Label.TextXAlignment = Enum.TextXAlignment.Left
         Label.Parent = Frame
-
-        local KeyBox = Instance.new("TextButton")
-        KeyBox.Size = UDim2.new(0, 60, 0, 25)
-        KeyBox.Position = UDim2.new(1, -65, 0.5, -12)
-        KeyBox.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-        KeyBox.Text = defaultKey.Name or "..."
-        KeyBox.TextColor3 = Color3.new(1,1,1)
-        KeyBox.Font = Enum.Font.GothamBold
-        KeyBox.TextSize = 12
-        KeyBox.AutoButtonColor = false
-        KeyBox.Parent = Frame
-        Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 5)
-
-        local waiting = false
-        KeyBox.MouseButton1Click:Connect(function()
-            if not waiting then
-                waiting = true
-                KeyBox.Text = "..."
-            end
-        end)
-
-        UIS.InputBegan:Connect(function(i, gpe)
-            if gpe then return end
-            if waiting then
-                waiting = false
-                KeyBox.Text = i.KeyCode.Name
-                callback(i.KeyCode)
-            elseif i.KeyCode == defaultKey then
-                callback(i.KeyCode)
+        
+        -- Simple logic to cycle through options for a compact UI
+        local currentIndex = 1
+        Frame.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                currentIndex = currentIndex + 1
+                if currentIndex > #list then currentIndex = 1 end
+                Label.Text = name .. ": " .. list[currentIndex]
+                callback(list[currentIndex])
             end
         end)
     end
 
-    -----------------------------------------------------------
-    -- BUILD UI
-    -----------------------------------------------------------
-    
-    -- Create Tabs
-    local HomeTab = CreateTab("Home")
-    local SettingsTab = CreateTab("Settings")
-
-    -- Select First Tab
-    if TabContents[1] then
-        TabContents[1].Frame.Visible = true
-        TabContents[1].Button.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    end
-
-    -- Drag UI
+    -- Drag
     local dragging, dragStart, startPos
     MainFrame.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -320,10 +241,7 @@ function NeverloseLibrary.CreateWindow()
     UIS.InputChanged:Connect(function(i)
         if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = i.Position - dragStart
-            MainFrame.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
@@ -339,15 +257,17 @@ function NeverloseLibrary.CreateWindow()
         end
     end)
 
-    -- Return objects to allow external usage if needed
+    -- Select first tab automatically
+    if Tabs[1] then
+        Tabs[1].Frame.Visible = true
+        Tabs[1].Btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    end
+
     return {
-        HomeTab = HomeTab,
-        SettingsTab = SettingsTab,
+        CreateTab = CreateTab,
         CreateToggle = CreateToggle,
         CreateSlider = CreateSlider,
-        CreateButton = CreateButton,
-        CreateLabel = CreateLabel,
-        CreateKeybind = CreateKeybind
+        CreateDropdown = CreateDropdown
     }
 end
 
