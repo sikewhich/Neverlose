@@ -1,4 +1,4 @@
--- NEVERLOSE STYLE UI LIBRARY
+-- NEVERLOSE UI LIBRARY (FIXED)d
 
 local Library = {}
 Library.__index = Library
@@ -27,10 +27,11 @@ function Library:RegisterAccent(obj, prop)
     obj[prop] = self.Accent
 end
 
-function Library:UpdateAccent()
+function Library:SetTheme(color)
+    self.Accent = color
     for _,v in ipairs(self.AccentObjects) do
         if v.obj and v.obj.Parent then
-            v.obj[v.prop] = self.Accent
+            v.obj[v.prop] = color
         end
     end
 end
@@ -39,11 +40,13 @@ end
 function Library:CreateWindow(title)
     local Window = {}
 
+    -- GUI
     local Gui = Instance.new("ScreenGui")
     Gui.Name = "NeverloseUILibrary"
     Gui.ResetOnSpawn = false
     Gui.Parent = PlayerGui
 
+    -- MAIN
     local Main = Instance.new("Frame")
     Main.Size = UDim2.new(0,780,0,460)
     Main.Position = UDim2.new(0.5,-390,0.5,-230)
@@ -58,17 +61,28 @@ function Library:CreateWindow(title)
     Header.BackgroundColor3 = Color3.fromRGB(18,18,21)
     Header.BorderSizePixel = 0
     Header.Parent = Main
+    Instance.new("UICorner",Header).CornerRadius = UDim.new(0,10)
 
+    -- TITLE
     local Title = Instance.new("TextLabel")
-    Title.Text = title or "NEVERLOSE UI"
+    Title.Text = title or "NEVERLOSE PRIVATE UI"
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 16
-    Title.BackgroundTransparency = 1
     Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.BackgroundTransparency = 1
     Title.Position = UDim2.new(0,16,0,0)
-    Title.Size = UDim2.new(1,-20,1,0)
+    Title.Size = UDim2.new(1,-80,1,0)
     Title.Parent = Header
     self:RegisterAccent(Title,"TextColor3")
+
+    -- PFP (FIXED)
+    local PFP = Instance.new("ImageLabel")
+    PFP.Size = UDim2.new(0,32,0,32)
+    PFP.Position = UDim2.new(1,-44,0.5,-16)
+    PFP.BackgroundTransparency = 1
+    PFP.Image = "rbxthumb://type=AvatarHeadShot&id="..Player.UserId.."&w=420&h=420"
+    PFP.Parent = Header
+    Instance.new("UICorner",PFP).CornerRadius = UDim.new(1,0)
 
     -- DRAG
     local dragging, dragStart, startPos
@@ -89,8 +103,8 @@ function Library:CreateWindow(title)
         if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = i.Position - dragStart
             Main.Position = UDim2.new(
-                startPos.X.Scale,startPos.X.Offset + delta.X,
-                startPos.Y.Scale,startPos.Y.Offset + delta.Y
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
             )
         end
     end)
@@ -110,9 +124,9 @@ function Library:CreateWindow(title)
     local SidePad = Instance.new("UIPadding",Sidebar)
     SidePad.PaddingTop = UDim.new(0,14)
 
+    -- PAGES
     local Pages = Instance.new("Folder",Main)
 
-    -- TAB
     function Window:CreateTab(name)
         local Tab = {}
 
@@ -148,7 +162,6 @@ function Library:CreateWindow(title)
             Page.Visible = true
         end)
 
-        -- SECTION
         function Tab:CreateSection(title)
             local Section = {}
 
@@ -173,14 +186,13 @@ function Library:CreateWindow(title)
             Holder.BackgroundTransparency = 1
             Holder.Parent = Box
 
-            local HolderLayout = Instance.new("UIListLayout",Holder)
-            HolderLayout.Padding = UDim.new(0,10)
-            HolderLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                Holder.Size = UDim2.new(1,0,0,HolderLayout.AbsoluteContentSize.Y)
-                Box.Size = UDim2.new(1,-10,0,HolderLayout.AbsoluteContentSize.Y + 46)
+            local HL = Instance.new("UIListLayout",Holder)
+            HL.Padding = UDim.new(0,10)
+            HL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                Holder.Size = UDim2.new(1,0,0,HL.AbsoluteContentSize.Y)
+                Box.Size = UDim2.new(1,-10,0,HL.AbsoluteContentSize.Y + 46)
             end)
 
-            -- TOGGLE
             function Section:AddToggle(text, default, callback)
                 local State = default or false
 
@@ -192,21 +204,20 @@ function Library:CreateWindow(title)
                 Btn.Parent = Holder
                 Instance.new("UICorner",Btn).CornerRadius = UDim.new(0,6)
 
-                local Label = Instance.new("TextLabel")
-                Label.Text = text
-                Label.Font = Enum.Font.GothamBold
-                Label.TextSize = 13
-                Label.TextColor3 = Color3.new(1,1,1)
-                Label.BackgroundTransparency = 1
-                Label.TextXAlignment = Enum.TextXAlignment.Left
-                Label.Position = UDim2.new(0,10,0,0)
-                Label.Size = UDim2.new(1,-60,1,0)
-                Label.Parent = Btn
+                local Txt = Instance.new("TextLabel")
+                Txt.Text = text
+                Txt.Font = Enum.Font.GothamBold
+                Txt.TextSize = 13
+                Txt.TextColor3 = Color3.new(1,1,1)
+                Txt.BackgroundTransparency = 1
+                Txt.TextXAlignment = Enum.TextXAlignment.Left
+                Txt.Position = UDim2.new(0,10,0,0)
+                Txt.Size = UDim2.new(1,-60,1,0)
+                Txt.Parent = Btn
 
                 local Box = Instance.new("Frame")
                 Box.Size = UDim2.new(0,20,0,20)
                 Box.Position = UDim2.new(1,-30,0.5,-10)
-                Box.BackgroundColor3 = State and Library.Accent or Color3.fromRGB(35,35,40)
                 Box.Parent = Btn
                 Instance.new("UICorner",Box).CornerRadius = UDim.new(0,4)
                 Library:RegisterAccent(Box,"BackgroundColor3")
