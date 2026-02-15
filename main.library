@@ -1,4 +1,4 @@
-local NeverloseLibrary = {}
+local NeverloseLibrary = {} -- v1
 
 -- Services
 local UIS = game:GetService("UserInputService")
@@ -9,7 +9,7 @@ local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-function NeverloseLibrary:Load()
+function NeverloseLibrary.CreateWindow()
     -- Config
     local Config = {
         Speed = 16,
@@ -62,38 +62,65 @@ function NeverloseLibrary:Load()
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = MainFrame
 
-    -- Content
-    local Content = Instance.new("ScrollingFrame")
-    Content.Size = UDim2.new(1, -180, 1, -80)
-    Content.Position = UDim2.new(0, 160, 0, 70)
-    Content.CanvasSize = UDim2.new(0, 0, 0, 600)
-    Content.ScrollBarThickness = 2
-    Content.BackgroundTransparency = 1
-    Content.Parent = MainFrame
+    -- Content Container
+    local ContentContainer = Instance.new("Frame")
+    ContentContainer.Name = "ContentContainer"
+    ContentContainer.Size = UDim2.new(1, -180, 1, -80)
+    ContentContainer.Position = UDim2.new(0, 160, 0, 70)
+    ContentContainer.BackgroundTransparency = 1
+    ContentContainer.Parent = MainFrame
 
-    local ContentLayout = Instance.new("UIListLayout", Content)
-    ContentLayout.Padding = UDim.new(0, 20)
+    local TabContents = {} -- Store tab frames
 
-    -- UI Elements
+    -- Function to Create Tabs
     local function CreateTab(name)
-        local Tab = Instance.new("TextButton")
-        Tab.Size = UDim2.new(0.85, 0, 0, 40)
-        Tab.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-        Tab.Text = name
-        Tab.TextColor3 = Color3.new(1,1,1)
-        Tab.Font = Enum.Font.GothamBold
-        Tab.TextSize = 14
-        Tab.AutoButtonColor = false
-        Tab.Parent = SideBar
-        Instance.new("UICorner", Tab).CornerRadius = UDim.new(0, 6)
+        local TabButton = Instance.new("TextButton")
+        TabButton.Size = UDim2.new(0.85, 0, 0, 40)
+        TabButton.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+        TabButton.Text = name
+        TabButton.TextColor3 = Color3.new(1,1,1)
+        TabButton.Font = Enum.Font.GothamBold
+        TabButton.TextSize = 14
+        TabButton.AutoButtonColor = false
+        TabButton.Parent = SideBar
+        Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
+
+        -- Create the content frame for this tab
+        local Content = Instance.new("ScrollingFrame")
+        Content.Name = name .. "Content"
+        Content.Size = UDim2.new(1, 0, 1, 0)
+        Content.CanvasSize = UDim2.new(0, 0, 0, 600)
+        Content.ScrollBarThickness = 2
+        Content.BackgroundTransparency = 1
+        Content.Visible = false -- Hidden by default
+        Content.Parent = ContentContainer
+
+        local ContentLayout = Instance.new("UIListLayout", Content)
+        ContentLayout.Padding = UDim.new(0, 20)
+
+        table.insert(TabContents, {Button = TabButton, Frame = Content})
+
+        -- Switch tab logic
+        TabButton.MouseButton1Click:Connect(function()
+            for _, v in pairs(TabContents) do
+                v.Frame.Visible = false
+                v.Button.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+            end
+            Content.Visible = true
+            TabButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        end)
+
+        -- Return the content frame so we can add elements to it
+        return Content
     end
 
-    local function CreateToggle(name, callback)
+    -- UI Element Functions (Now require Parent argument)
+    local function CreateToggle(name, parent, callback)
         local Button = Instance.new("TextButton")
         Button.Size = UDim2.new(0, 300, 0, 30)
         Button.BackgroundTransparency = 1
         Button.Text = ""
-        Button.Parent = Content
+        Button.Parent = parent
 
         local Label = Instance.new("TextLabel")
         Label.Text = name
@@ -122,12 +149,11 @@ function NeverloseLibrary:Load()
         end)
     end
 
-    -- Fixed Slider (Per-Slider Drag)
-    local function CreateSlider(name, min, max, default, callback)
+    local function CreateSlider(name, min, max, default, parent, callback)
         local Frame = Instance.new("Frame")
         Frame.Size = UDim2.new(0, 300, 0, 55)
         Frame.BackgroundTransparency = 1
-        Frame.Parent = Content
+        Frame.Parent = parent
 
         local Label = Instance.new("TextLabel")
         Label.Text = name .. ": " .. default
@@ -165,7 +191,7 @@ function NeverloseLibrary:Load()
             Fill.Size = UDim2.new(pct, 0, 1, 0)
 
             local value = min + (max - min) * pct
-            value = math.floor(value * 100) / 100 -- smooth
+            value = math.floor(value * 100) / 100
 
             Label.Text = name .. ": " .. value
             callback(value)
@@ -240,17 +266,23 @@ function NeverloseLibrary:Load()
         end
     end)
 
-    -- Build UI
-    CreateTab("Movement")
-    CreateSlider("WalkSpeed", 1, 999, 16, function(v) Config.Speed = v end)
-    CreateSlider("JumpPower", 1, 999, 50, function(v) Config.Jump = v end)
-    CreateToggle("Noclip", function(v) Config.Noclip = v end)
-    CreateToggle("Infinite Jump", function(v) Config.InfJump = v end)
-    CreateToggle("Fly", function(v) Config.Fly = v end)
-    CreateSlider("Fly Speed", 10, 500, 50, function(v) Config.FlySpeed = v end)
+    -- Build UI with Tabs
+    local MovementTab = CreateTab("Movement")
+    CreateSlider("WalkSpeed", 1, 999, 16, MovementTab, function(v) Config.Speed = v end)
+    CreateSlider("JumpPower", 1, 999, 50, MovementTab, function(v) Config.Jump = v end)
+    CreateToggle("Noclip", MovementTab, function(v) Config.Noclip = v end)
+    CreateToggle("Infinite Jump", MovementTab, function(v) Config.InfJump = v end)
+    CreateToggle("Fly", MovementTab, function(v) Config.Fly = v end)
+    CreateSlider("Fly Speed", 10, 500, 50, MovementTab, function(v) Config.FlySpeed = v end)
 
     CreateTab("Combat")
     CreateTab("Settings")
+    
+    -- Select first tab by default
+    if TabContents[1] then
+        TabContents[1].Frame.Visible = true
+        TabContents[1].Button.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    end
 
     -- Drag UI
     local dragging, dragStart, startPos
