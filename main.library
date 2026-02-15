@@ -1,4 +1,4 @@
-local NeverloseLibrary = {} -- v1
+local NeverloseLibrary = {}
 
 -- Services
 local UIS = game:GetService("UserInputService")
@@ -10,16 +10,6 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 function NeverloseLibrary.CreateWindow()
-    -- Config
-    local Config = {
-        Speed = 16,
-        Jump = 50,
-        Noclip = false,
-        InfJump = false,
-        Fly = false,
-        FlySpeed = 50
-    }
-
     -- Main UI
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "Neverlose_Pro"
@@ -72,7 +62,9 @@ function NeverloseLibrary.CreateWindow()
 
     local TabContents = {} -- Store tab frames
 
-    -- Function to Create Tabs
+    -----------------------------------------------------------
+    -- TAB FUNCTION
+    -----------------------------------------------------------
     local function CreateTab(name)
         local TabButton = Instance.new("TextButton")
         TabButton.Size = UDim2.new(0.85, 0, 0, 40)
@@ -114,7 +106,11 @@ function NeverloseLibrary.CreateWindow()
         return Content
     end
 
-    -- UI Element Functions (Now require Parent argument)
+    -----------------------------------------------------------
+    -- ELEMENT FUNCTIONS
+    -----------------------------------------------------------
+    
+    -- Toggle
     local function CreateToggle(name, parent, callback)
         local Button = Instance.new("TextButton")
         Button.Size = UDim2.new(0, 300, 0, 30)
@@ -149,6 +145,7 @@ function NeverloseLibrary.CreateWindow()
         end)
     end
 
+    -- Slider
     local function CreateSlider(name, min, max, default, parent, callback)
         local Frame = Instance.new("Frame")
         Frame.Size = UDim2.new(0, 300, 0, 55)
@@ -217,68 +214,94 @@ function NeverloseLibrary.CreateWindow()
         end)
     end
 
-    -- Logic (Loops Always On)
-    RunService.Stepped:Connect(function()
-        local char = Player.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if not hum then return end
+    -- Button
+    local function CreateButton(name, parent, callback)
+        local Btn = Instance.new("TextButton")
+        Btn.Size = UDim2.new(0, 300, 0, 35)
+        Btn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        Btn.Text = name
+        Btn.TextColor3 = Color3.new(1,1,1)
+        Btn.Font = Enum.Font.GothamBold
+        Btn.TextSize = 14
+        Btn.AutoButtonColor = false
+        Btn.Parent = parent
+        Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
 
-        hum.WalkSpeed = Config.Speed
-        hum.JumpPower = Config.Jump
+        Btn.MouseButton1Click:Connect(callback)
+    end
 
-        if Config.Noclip then
-            for _, v in ipairs(char:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = false
-                end
+    -- Label
+    local function CreateLabel(text, parent)
+        local Label = Instance.new("TextLabel")
+        Label.Text = text
+        Label.Size = UDim2.new(0, 300, 0, 20)
+        Label.BackgroundTransparency = 1
+        Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+        Label.Font = Enum.Font.Gotham
+        Label.TextSize = 13
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Parent = parent
+        return Label
+    end
+
+    -- Keybind
+    local function CreateKeybind(name, defaultKey, parent, callback)
+        local Frame = Instance.new("Frame")
+        Frame.Size = UDim2.new(0, 300, 0, 30)
+        Frame.BackgroundTransparency = 1
+        Frame.Parent = parent
+
+        local Label = Instance.new("TextLabel")
+        Label.Text = name
+        Label.Size = UDim2.new(1, -80, 1, 0)
+        Label.BackgroundTransparency = 1
+        Label.TextColor3 = Color3.new(1,1,1)
+        Label.Font = Enum.Font.GothamBold
+        Label.TextSize = 14
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Parent = Frame
+
+        local KeyBox = Instance.new("TextButton")
+        KeyBox.Size = UDim2.new(0, 60, 0, 25)
+        KeyBox.Position = UDim2.new(1, -65, 0.5, -12)
+        KeyBox.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        KeyBox.Text = defaultKey.Name or "..."
+        KeyBox.TextColor3 = Color3.new(1,1,1)
+        KeyBox.Font = Enum.Font.GothamBold
+        KeyBox.TextSize = 12
+        KeyBox.AutoButtonColor = false
+        KeyBox.Parent = Frame
+        Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 5)
+
+        local waiting = false
+        KeyBox.MouseButton1Click:Connect(function()
+            if not waiting then
+                waiting = true
+                KeyBox.Text = "..."
             end
-        end
-    end)
+        end)
 
-    UIS.JumpRequest:Connect(function()
-        if Config.InfJump then
-            local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
-        end
-    end)
+        UIS.InputBegan:Connect(function(i, gpe)
+            if gpe then return end
+            if waiting then
+                waiting = false
+                KeyBox.Text = i.KeyCode.Name
+                callback(i.KeyCode)
+            elseif i.KeyCode == defaultKey then
+                callback(i.KeyCode)
+            end
+        end)
+    end
 
-    RunService.RenderStepped:Connect(function()
-        local char = Player.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if not hrp or not hum then return end
-
-        if Config.Fly then
-            local cam = workspace.CurrentCamera
-            local dir = Vector3.zero
-
-            if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-            if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-            if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-            if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-            if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
-            if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.new(0,1,0) end
-
-            hrp.Velocity = dir * Config.FlySpeed
-            hum.PlatformStand = true
-        else
-            hum.PlatformStand = false
-        end
-    end)
-
-    -- Build UI with Tabs
-    local MovementTab = CreateTab("Movement")
-    CreateSlider("WalkSpeed", 1, 999, 16, MovementTab, function(v) Config.Speed = v end)
-    CreateSlider("JumpPower", 1, 999, 50, MovementTab, function(v) Config.Jump = v end)
-    CreateToggle("Noclip", MovementTab, function(v) Config.Noclip = v end)
-    CreateToggle("Infinite Jump", MovementTab, function(v) Config.InfJump = v end)
-    CreateToggle("Fly", MovementTab, function(v) Config.Fly = v end)
-    CreateSlider("Fly Speed", 10, 500, 50, MovementTab, function(v) Config.FlySpeed = v end)
-
-    CreateTab("Combat")
-    CreateTab("Settings")
+    -----------------------------------------------------------
+    -- BUILD UI
+    -----------------------------------------------------------
     
-    -- Select first tab by default
+    -- Create Tabs
+    local HomeTab = CreateTab("Home")
+    local SettingsTab = CreateTab("Settings")
+
+    -- Select First Tab
     if TabContents[1] then
         TabContents[1].Frame.Visible = true
         TabContents[1].Button.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
@@ -315,6 +338,17 @@ function NeverloseLibrary.CreateWindow()
             MainFrame.Visible = not MainFrame.Visible
         end
     end)
+
+    -- Return objects to allow external usage if needed
+    return {
+        HomeTab = HomeTab,
+        SettingsTab = SettingsTab,
+        CreateToggle = CreateToggle,
+        CreateSlider = CreateSlider,
+        CreateButton = CreateButton,
+        CreateLabel = CreateLabel,
+        CreateKeybind = CreateKeybind
+    }
 end
 
 return NeverloseLibrary
