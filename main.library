@@ -22,7 +22,6 @@ function NeverloseLibrary.CreateWindow()
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = Neverlose
-    MainFrame.Active = true -- ✅ REQUIRED FOR DRAG
     local MainCorner = Instance.new("UICorner", MainFrame)
     MainCorner.CornerRadius = UDim.new(0, 8)
 
@@ -50,14 +49,14 @@ function NeverloseLibrary.CreateWindow()
     SubTitle.Size = UDim2.new(1, 0, 0, 20)
     SubTitle.Position = UDim2.new(0, 0, 0, 35)
     SubTitle.BackgroundTransparency = 1
-    SubTitle.Text = "<font color='rgb(220, 40, 40)'>V4</font>" -- 🔴 RED
+    SubTitle.Text = "<font color='rgb(255, 50, 50)'>V4</font>"
     SubTitle.RichText = true
     SubTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     SubTitle.Font = Enum.Font.GothamBold
     SubTitle.TextSize = 14
     SubTitle.Parent = SideBar
 
-    -- User Profile
+    -- User Profile (PFP Area)
     local PfpFrame = Instance.new("Frame")
     PfpFrame.Size = UDim2.new(0, 40, 0, 40)
     PfpFrame.Position = UDim2.new(0.5, -20, 0, 70)
@@ -86,7 +85,7 @@ function NeverloseLibrary.CreateWindow()
     UserText.TextTruncate = Enum.TextTruncate.AtEnd
     UserText.Parent = SideBar
 
-    -- Tab List
+    -- Tab List Container
     local TabList = Instance.new("Frame")
     TabList.Size = UDim2.new(1, 0, 1, -150)
     TabList.Position = UDim2.new(0, 0, 0, 140)
@@ -104,43 +103,48 @@ function NeverloseLibrary.CreateWindow()
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = MainFrame
 
-    -- DRAG LOGIC (FIXED, SAME STRUCTURE)
+    -- DRAG FRAME (Fixed Dragging Implementation)
+    local DragFrame = Instance.new("Frame")
+    DragFrame.Size = UDim2.new(0, 160, 0, 60) -- Cover top portion of sidebar
+    DragFrame.Position = UDim2.new(0, 0, 0, 0)
+    DragFrame.BackgroundTransparency = 1
+    DragFrame.Active = true
+    DragFrame.Parent = MainFrame
+    DragFrame.ZIndex = 10 -- Ensure it's on top
+    
+    -- Dragging Logic
     local Dragging = false
     local DragStart, StartPos
 
-    local function InputHandler(Input)
+    DragFrame.InputBegan:Connect(function(Input)
         if Input.UserInputType == Enum.UserInputType.MouseButton1 then
             Dragging = true
             DragStart = Input.Position
             StartPos = MainFrame.Position
         end
-    end
+    end)
 
-    local function MoveHandler(Input)
+    UserInputService.InputChanged:Connect(function(Input)
         if Dragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
             local Delta = Input.Position - DragStart
             MainFrame.Position = UDim2.new(
-                StartPos.X.Scale,
-                StartPos.X.Offset + Delta.X,
-                StartPos.Y.Scale,
+                StartPos.X.Scale, 
+                StartPos.X.Offset + Delta.X, 
+                StartPos.Y.Scale, 
                 StartPos.Y.Offset + Delta.Y
             )
         end
-    end
+    end)
 
-    local function EndHandler(Input)
+    UserInputService.InputEnded:Connect(function(Input)
         if Input.UserInputType == Enum.UserInputType.MouseButton1 then
             Dragging = false
         end
-    end
-
-    MainFrame.InputBegan:Connect(InputHandler)
-    UserInputService.InputChanged:Connect(MoveHandler)
-    UserInputService.InputEnded:Connect(EndHandler)
+    end)
 
     local AllTabs = {}
 
-    -- Create Tab
+    -- Library Functions
     local function CreateTab(Name)
         local TabButton = Instance.new("TextButton")
         TabButton.Size = UDim2.new(0.9, 0, 0, 35)
@@ -156,6 +160,7 @@ function NeverloseLibrary.CreateWindow()
 
         local ContentFrame = Instance.new("ScrollingFrame")
         ContentFrame.Size = UDim2.new(1, 0, 1, 0)
+        ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
         ContentFrame.ScrollBarThickness = 4
         ContentFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
         ContentFrame.Visible = false
@@ -169,7 +174,9 @@ function NeverloseLibrary.CreateWindow()
 
         local Layout = Instance.new("UIListLayout", ContentFrame)
         Layout.Padding = UDim.new(0, 8)
+        Layout.SortOrder = Enum.SortOrder.LayoutOrder
 
+        -- Auto canvas size
         ContentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
         TabButton.MouseButton1Click:Connect(function()
@@ -178,23 +185,169 @@ function NeverloseLibrary.CreateWindow()
                 v.Button.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
             end
             ContentFrame.Visible = true
-            TabButton.BackgroundColor3 = Color3.fromRGB(220, 40, 40) -- 🔴 RED
+            TabButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         end)
 
         table.insert(AllTabs, {Button = TabButton, Frame = ContentFrame})
         return ContentFrame
     end
 
-    -- Auto select first tab
+    local function CreateToggle(Name, Parent, Callback)
+        local ToggleFrame = Instance.new("Frame")
+        ToggleFrame.Size = UDim2.new(0, 280, 0, 30)
+        ToggleFrame.BackgroundTransparency = 1
+        ToggleFrame.Parent = Parent
+
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(1, -40, 1, 0)
+        Label.BackgroundTransparency = 1
+        Label.Text = Name
+        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.Font = Enum.Font.GothamBold
+        Label.TextSize = 14
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Parent = ToggleFrame
+
+        local CheckFrame = Instance.new("Frame")
+        CheckFrame.Size = UDim2.new(0, 24, 0, 24)
+        CheckFrame.Position = UDim2.new(1, -28, 0.5, -12)
+        CheckFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+        CheckFrame.Parent = ToggleFrame
+        local CheckCorner = Instance.new("UICorner", CheckFrame)
+        CheckCorner.CornerRadius = UDim.new(0, 4)
+
+        local Toggled = false
+        ToggleFrame.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Toggled = not Toggled
+                TweenService:Create(CheckFrame, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Toggled and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(40, 40, 45)
+                }):Play()
+                Callback(Toggled)
+            end
+        end)
+    end
+
+    local function CreateSlider(Name, Min, Max, Default, Parent, Callback)
+        local SliderFrame = Instance.new("Frame")
+        SliderFrame.Size = UDim2.new(0, 280, 0, 50)
+        SliderFrame.BackgroundTransparency = 1
+        SliderFrame.Parent = Parent
+
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(1, 0, 0, 20)
+        Label.BackgroundTransparency = 1
+        Label.Text = Name .. ": " .. Default
+        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.Font = Enum.Font.GothamBold
+        Label.TextSize = 14
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Parent = SliderFrame
+
+        local BackBar = Instance.new("Frame")
+        BackBar.Size = UDim2.new(1, 0, 0, 6)
+        BackBar.Position = UDim2.new(0, 0, 0, 30)
+        BackBar.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+        BackBar.Parent = SliderFrame
+        local BarCorner = Instance.new("UICorner", BackBar)
+        BarCorner.CornerRadius = UDim.new(1, 0)
+
+        local FillBar = Instance.new("Frame")
+        FillBar.Size = UDim2.new((Default - Min) / (Max - Min), 0, 1, 0)
+        FillBar.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        FillBar.Parent = BackBar
+        local FillCorner = Instance.new("UICorner", FillBar)
+        FillCorner.CornerRadius = UDim.new(1, 0)
+
+        local Sliding = false
+
+        local function Update(Value)
+            local Percent = math.clamp((Value - Min) / (Max - Min), 0, 1)
+            FillBar.Size = UDim2.new(Percent, 0, 1, 0)
+            Label.Text = Name .. ": " .. math.floor(Value)
+            Callback(math.floor(Value))
+        end
+
+        BackBar.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Sliding = true
+                local MouseX = UserInputService:GetMouseLocation().X
+                local BarX = BackBar.AbsolutePosition.X
+                local BarWidth = BackBar.AbsoluteSize.X
+                local RelX = math.clamp(MouseX - BarX, 0, BarWidth)
+                local Val = Min + (RelX / BarWidth) * (Max - Min)
+                Update(Val)
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(Input)
+            if Sliding and Input.UserInputType == Enum.UserInputType.MouseMovement then
+                local MouseX = UserInputService:GetMouseLocation().X
+                local BarX = BackBar.AbsolutePosition.X
+                local BarWidth = BackBar.AbsoluteSize.X
+                local RelX = math.clamp(MouseX - BarX, 0, BarWidth)
+                local Val = Min + (RelX / BarWidth) * (Max - Min)
+                Update(Val)
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Sliding = false
+            end
+        end)
+    end
+
+    local function CreateDropdown(Name, List, Parent, Callback)
+        local DropFrame = Instance.new("Frame")
+        DropFrame.Size = UDim2.new(0, 280, 0, 30)
+        DropFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        DropFrame.Parent = Parent
+        local DropCorner = Instance.new("UICorner", DropFrame)
+        DropCorner.CornerRadius = UDim.new(0, 6)
+
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(1, -20, 1, 0)
+        Label.Position = UDim2.new(0, 10, 0, 0)
+        Label.BackgroundTransparency = 1
+        Label.Text = Name .. ": " .. List[1]
+        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Label.Font = Enum.Font.GothamBold
+        Label.TextSize = 14
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Parent = DropFrame
+
+        local Index = 1
+        DropFrame.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Index = Index + 1
+                if Index > #List then Index = 1 end
+                Label.Text = Name .. ": " .. List[Index]
+                Callback(List[Index])
+            end
+        end)
+    end
+
+    -- Toggle UI Visibility
+    UserInputService.InputBegan:Connect(function(Input, GPE)
+        if not GPE and Input.KeyCode == Enum.KeyCode.RightControl then
+            MainFrame.Visible = not MainFrame.Visible
+        end
+    end)
+
+    -- Select First Tab automatically
     task.defer(function()
         if #AllTabs > 0 then
             AllTabs[1].Frame.Visible = true
-            AllTabs[1].Button.BackgroundColor3 = Color3.fromRGB(220, 40, 40) -- 🔴 RED
+            AllTabs[1].Button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         end
     end)
 
     return {
-        CreateTab = CreateTab
+        CreateTab = CreateTab,
+        CreateToggle = CreateToggle,
+        CreateSlider = CreateSlider,
+        CreateDropdown = CreateDropdown
     }
 end
 
