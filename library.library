@@ -1,7 +1,6 @@
--- NEVERLOSE UI LIBRARY (FIXED)d
+-- NEVERLOSE UI LIBRARY (FULL API SUPPORT)
 
-local Library = {}
-Library.__index = Library
+local NEVERLOSE = {}
 
 -- SERVICES
 local Players = game:GetService("Players")
@@ -12,77 +11,70 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 -- THEME
-Library.Themes = {
-    Red = Color3.fromRGB(255,80,80),
-    Blue = Color3.fromRGB(80,140,255),
-    Green = Color3.fromRGB(80,255,140),
-    Yellow = Color3.fromRGB(255,220,80)
+local Themes = {
+    original = Color3.fromRGB(255, 80, 80),
+    blue = Color3.fromRGB(80, 140, 255),
+    green = Color3.fromRGB(80, 255, 140),
+    yellow = Color3.fromRGB(255, 220, 80)
 }
 
-Library.Accent = Library.Themes.Red
-Library.AccentObjects = {}
+local Accent = Themes.original
+local AccentObjects = {}
 
-function Library:RegisterAccent(obj, prop)
-    table.insert(self.AccentObjects, {obj = obj, prop = prop})
-    obj[prop] = self.Accent
+local function bindAccent(obj, prop)
+    table.insert(AccentObjects, {obj, prop})
+    obj[prop] = Accent
 end
 
-function Library:SetTheme(color)
-    self.Accent = color
-    for _,v in ipairs(self.AccentObjects) do
-        if v.obj and v.obj.Parent then
-            v.obj[v.prop] = color
+local function setTheme(name)
+    Accent = Themes[string.lower(name)] or Themes.original
+    for _,v in ipairs(AccentObjects) do
+        if v[1] and v[1].Parent then
+            v[1][v[2]] = Accent
         end
     end
 end
 
 -- WINDOW
-function Library:CreateWindow(title)
+function NEVERLOSE:AddWindow(title, subtitle, theme)
+    if theme then setTheme(theme) end
+
     local Window = {}
 
-    -- GUI
     local Gui = Instance.new("ScreenGui")
-    Gui.Name = "NeverloseUILibrary"
+    Gui.Name = "NeverloseUI"
     Gui.ResetOnSpawn = false
     Gui.Parent = PlayerGui
 
-    -- MAIN
-    local Main = Instance.new("Frame")
-    Main.Size = UDim2.new(0,780,0,460)
-    Main.Position = UDim2.new(0.5,-390,0.5,-230)
-    Main.BackgroundColor3 = Color3.fromRGB(14,14,16)
+    local Main = Instance.new("Frame", Gui)
+    Main.Size = UDim2.new(0, 800, 0, 480)
+    Main.Position = UDim2.new(0.5, -400, 0.5, -240)
+    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
     Main.BorderSizePixel = 0
-    Main.Parent = Gui
-    Instance.new("UICorner",Main).CornerRadius = UDim.new(0,10)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
     -- HEADER
-    local Header = Instance.new("Frame")
-    Header.Size = UDim2.new(1,0,0,48)
-    Header.BackgroundColor3 = Color3.fromRGB(18,18,21)
-    Header.BorderSizePixel = 0
-    Header.Parent = Main
-    Instance.new("UICorner",Header).CornerRadius = UDim.new(0,10)
+    local Header = Instance.new("Frame", Main)
+    Header.Size = UDim2.new(1, 0, 0, 50)
+    Header.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
-    -- TITLE
-    local Title = Instance.new("TextLabel")
-    Title.Text = title or "NEVERLOSE PRIVATE UI"
+    local Title = Instance.new("TextLabel", Header)
+    Title.Text = title .. "  |  " .. subtitle
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 16
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0,16,0,0)
-    Title.Size = UDim2.new(1,-80,1,0)
-    Title.Parent = Header
-    self:RegisterAccent(Title,"TextColor3")
+    Title.Position = UDim2.new(0, 16, 0, 0)
+    Title.Size = UDim2.new(1, -70, 1, 0)
+    bindAccent(Title, "TextColor3")
 
-    -- PFP (FIXED)
-    local PFP = Instance.new("ImageLabel")
-    PFP.Size = UDim2.new(0,32,0,32)
-    PFP.Position = UDim2.new(1,-44,0.5,-16)
+    local PFP = Instance.new("ImageLabel", Header)
+    PFP.Size = UDim2.new(0, 32, 0, 32)
+    PFP.Position = UDim2.new(1, -42, 0.5, -16)
     PFP.BackgroundTransparency = 1
-    PFP.Image = "rbxthumb://type=AvatarHeadShot&id="..Player.UserId.."&w=420&h=420"
-    PFP.Parent = Header
-    Instance.new("UICorner",PFP).CornerRadius = UDim.new(1,0)
+    PFP.Image = "rbxthumb://type=AvatarHeadShot&id=" .. Player.UserId .. "&w=420&h=420"
+    Instance.new("UICorner", PFP).CornerRadius = UDim.new(1, 0)
 
     -- DRAG
     local dragging, dragStart, startPos
@@ -103,137 +95,220 @@ function Library:CreateWindow(title)
         if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = i.Position - dragStart
             Main.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
             )
         end
     end)
 
     -- SIDEBAR
-    local Sidebar = Instance.new("Frame")
-    Sidebar.Size = UDim2.new(0,160,1,-48)
-    Sidebar.Position = UDim2.new(0,0,0,48)
-    Sidebar.BackgroundColor3 = Color3.fromRGB(12,12,14)
-    Sidebar.BorderSizePixel = 0
-    Sidebar.Parent = Main
+    local Sidebar = Instance.new("Frame", Main)
+    Sidebar.Size = UDim2.new(0, 170, 1, -50)
+    Sidebar.Position = UDim2.new(0, 0, 0, 50)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
 
-    local SideLayout = Instance.new("UIListLayout",Sidebar)
-    SideLayout.Padding = UDim.new(0,8)
+    local SideLayout = Instance.new("UIListLayout", Sidebar)
+    SideLayout.Padding = UDim.new(0, 8)
     SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    Instance.new("UIPadding", Sidebar).PaddingTop = UDim.new(0, 12)
 
-    local SidePad = Instance.new("UIPadding",Sidebar)
-    SidePad.PaddingTop = UDim.new(0,14)
+    local Pages = Instance.new("Folder", Main)
 
-    -- PAGES
-    local Pages = Instance.new("Folder",Main)
+    -- TAB LABEL
+    function Window:AddTabLabel(text)
+        local L = Instance.new("TextLabel", Sidebar)
+        L.Text = text
+        L.Font = Enum.Font.GothamBold
+        L.TextSize = 12
+        L.BackgroundTransparency = 1
+        L.Size = UDim2.new(1, -20, 0, 20)
+        bindAccent(L, "TextColor3")
+    end
 
-    function Window:CreateTab(name)
+    -- TAB
+    function Window:AddTab(name, icon)
         local Tab = {}
 
-        local Page = Instance.new("ScrollingFrame")
-        Page.Size = UDim2.new(1,-180,1,-70)
-        Page.Position = UDim2.new(0,170,0,60)
-        Page.ScrollBarThickness = 3
+        local Page = Instance.new("Frame", Pages)
+        Page.Size = UDim2.new(1, -190, 1, -70)
+        Page.Position = UDim2.new(0, 180, 0, 60)
         Page.Visible = false
         Page.BackgroundTransparency = 1
-        Page.Parent = Pages
 
-        local Layout = Instance.new("UIListLayout",Page)
-        Layout.Padding = UDim.new(0,14)
-        Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            Page.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 20)
-        end)
+        local Left = Instance.new("Frame", Page)
+        Left.Size = UDim2.new(0.5, -6, 1, 0)
+        Left.BackgroundTransparency = 1
 
-        local Btn = Instance.new("TextButton")
-        Btn.Size = UDim2.new(0.9,0,0,38)
+        local Right = Instance.new("Frame", Page)
+        Right.Position = UDim2.new(0.5, 6, 0, 0)
+        Right.Size = UDim2.new(0.5, -6, 1, 0)
+        Right.BackgroundTransparency = 1
+
+        Instance.new("UIListLayout", Left).Padding = UDim.new(0, 12)
+        Instance.new("UIListLayout", Right).Padding = UDim.new(0, 12)
+
+        local Btn = Instance.new("TextButton", Sidebar)
         Btn.Text = name
         Btn.Font = Enum.Font.GothamBold
         Btn.TextSize = 14
+        Btn.Size = UDim2.new(0.9, 0, 0, 36)
+        Btn.BackgroundColor3 = Color3.fromRGB(22, 22, 26)
         Btn.TextColor3 = Color3.new(1,1,1)
-        Btn.BackgroundColor3 = Color3.fromRGB(20,20,24)
-        Btn.AutoButtonColor = false
-        Btn.Parent = Sidebar
-        Instance.new("UICorner",Btn).CornerRadius = UDim.new(0,6)
+        Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
 
         Btn.MouseButton1Click:Connect(function()
-            for _,v in pairs(Pages:GetChildren()) do
-                v.Visible = false
+            for _,p in pairs(Pages:GetChildren()) do
+                p.Visible = false
             end
             Page.Visible = true
         end)
 
-        function Tab:CreateSection(title)
+        -- SECTION
+        function Tab:AddSection(title, side)
             local Section = {}
+            local Parent = (side == "right") and Right or Left
 
-            local Box = Instance.new("Frame")
-            Box.Size = UDim2.new(1,-10,0,40)
-            Box.BackgroundColor3 = Color3.fromRGB(18,18,22)
-            Box.Parent = Page
-            Instance.new("UICorner",Box).CornerRadius = UDim.new(0,8)
+            local Box = Instance.new("Frame", Parent)
+            Box.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+            Box.Size = UDim2.new(1, 0, 0, 40)
+            Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
 
-            local Label = Instance.new("TextLabel")
+            local Label = Instance.new("TextLabel", Box)
             Label.Text = title
             Label.Font = Enum.Font.GothamBold
             Label.TextSize = 14
             Label.BackgroundTransparency = 1
-            Label.Position = UDim2.new(0,12,0,8)
-            Label.Size = UDim2.new(1,-24,0,20)
-            Label.Parent = Box
-            Library:RegisterAccent(Label,"TextColor3")
+            Label.Position = UDim2.new(0, 10, 0, 8)
+            bindAccent(Label, "TextColor3")
 
-            local Holder = Instance.new("Frame")
-            Holder.Position = UDim2.new(0,0,0,36)
+            local Holder = Instance.new("Frame", Box)
+            Holder.Position = UDim2.new(0, 0, 0, 36)
             Holder.BackgroundTransparency = 1
-            Holder.Parent = Box
 
-            local HL = Instance.new("UIListLayout",Holder)
-            HL.Padding = UDim.new(0,10)
-            HL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                Holder.Size = UDim2.new(1,0,0,HL.AbsoluteContentSize.Y)
-                Box.Size = UDim2.new(1,-10,0,HL.AbsoluteContentSize.Y + 46)
+            local Layout = Instance.new("UIListLayout", Holder)
+            Layout.Padding = UDim.new(0, 8)
+
+            Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                Holder.Size = UDim2.new(1, 0, 0, Layout.AbsoluteContentSize.Y)
+                Box.Size = UDim2.new(1, 0, 0, Layout.AbsoluteContentSize.Y + 44)
             end)
 
-            function Section:AddToggle(text, default, callback)
-                local State = default or false
+            -- TOGGLE
+            function Section:AddToggle(text, default, cb)
+                local state = default or false
+                local B = Instance.new("TextButton", Holder)
+                B.Size = UDim2.new(1, -16, 0, 30)
+                B.BackgroundColor3 = Color3.fromRGB(25,25,30)
+                B.Text = ""
+                Instance.new("UICorner", B)
 
-                local Btn = Instance.new("TextButton")
-                Btn.Size = UDim2.new(1,-20,0,32)
-                Btn.BackgroundColor3 = Color3.fromRGB(22,22,26)
-                Btn.Text = ""
-                Btn.AutoButtonColor = false
-                Btn.Parent = Holder
-                Instance.new("UICorner",Btn).CornerRadius = UDim.new(0,6)
+                local T = Instance.new("TextLabel", B)
+                T.Text = text
+                T.BackgroundTransparency = 1
+                T.Position = UDim2.new(0, 10, 0, 0)
+                T.Size = UDim2.new(1, -60, 1, 0)
+                T.Font = Enum.Font.Gotham
+                T.TextSize = 13
+                T.TextColor3 = Color3.new(1,1,1)
 
-                local Txt = Instance.new("TextLabel")
-                Txt.Text = text
-                Txt.Font = Enum.Font.GothamBold
-                Txt.TextSize = 13
-                Txt.TextColor3 = Color3.new(1,1,1)
-                Txt.BackgroundTransparency = 1
-                Txt.TextXAlignment = Enum.TextXAlignment.Left
-                Txt.Position = UDim2.new(0,10,0,0)
-                Txt.Size = UDim2.new(1,-60,1,0)
-                Txt.Parent = Btn
+                local I = Instance.new("Frame", B)
+                I.Size = UDim2.new(0, 18, 0, 18)
+                I.Position = UDim2.new(1, -28, 0.5, -9)
+                Instance.new("UICorner", I)
 
-                local Box = Instance.new("Frame")
-                Box.Size = UDim2.new(0,20,0,20)
-                Box.Position = UDim2.new(1,-30,0.5,-10)
-                Box.Parent = Btn
-                Instance.new("UICorner",Box).CornerRadius = UDim.new(0,4)
-                Library:RegisterAccent(Box,"BackgroundColor3")
-
-                local function Set(v)
-                    State = v
-                    Box.BackgroundColor3 = State and Library.Accent or Color3.fromRGB(35,35,40)
-                    if callback then callback(State) end
+                local function set(v)
+                    state = v
+                    I.BackgroundColor3 = v and Accent or Color3.fromRGB(40,40,45)
+                    if cb then cb(v) end
                 end
 
-                Btn.MouseButton1Click:Connect(function()
-                    Set(not State)
+                B.MouseButton1Click:Connect(function()
+                    set(not state)
                 end)
 
-                Set(State)
-                return Set
+                set(state)
+            end
+
+            -- SLIDER
+            function Section:AddSlider(text, min, max, default, cb)
+                local value = default or min
+
+                local Holder2 = Instance.new("Frame", Holder)
+                Holder2.Size = UDim2.new(1, -16, 0, 40)
+                Holder2.BackgroundTransparency = 1
+
+                local L = Instance.new("TextLabel", Holder2)
+                L.Text = text .. ": " .. value
+                L.Font = Enum.Font.Gotham
+                L.TextSize = 13
+                L.BackgroundTransparency = 1
+                L.Size = UDim2.new(1,0,0,18)
+                L.TextColor3 = Color3.new(1,1,1)
+
+                local Bar = Instance.new("Frame", Holder2)
+                Bar.Position = UDim2.new(0,0,0,24)
+                Bar.Size = UDim2.new(1,0,0,6)
+                Bar.BackgroundColor3 = Color3.fromRGB(40,40,45)
+                Instance.new("UICorner", Bar)
+
+                local Fill = Instance.new("Frame", Bar)
+                Fill.Size = UDim2.new((value-min)/(max-min),0,1,0)
+                bindAccent(Fill,"BackgroundColor3")
+                Instance.new("UICorner", Fill)
+
+                local dragging = false
+                Bar.InputBegan:Connect(function(i)
+                    if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+                end)
+                UIS.InputEnded:Connect(function(i)
+                    if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+                end)
+                UIS.InputChanged:Connect(function(i)
+                    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+                        local pct = math.clamp((i.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+                        value = math.floor(min + (max-min)*pct)
+                        Fill.Size = UDim2.new(pct,0,1,0)
+                        L.Text = text .. ": " .. value
+                        if cb then cb(value) end
+                    end
+                end)
+            end
+
+            -- DROPDOWN
+            function Section:AddDropdown(text, list, default, cb)
+                local current = default or list[1]
+
+                local B = Instance.new("TextButton", Holder)
+                B.Size = UDim2.new(1, -16, 0, 30)
+                B.BackgroundColor3 = Color3.fromRGB(25,25,30)
+                B.Text = text .. ": " .. tostring(current)
+                B.Font = Enum.Font.Gotham
+                B.TextSize = 13
+                B.TextColor3 = Color3.new(1,1,1)
+                Instance.new("UICorner", B)
+
+                B.MouseButton1Click:Connect(function()
+                    local idx = table.find(list, current) or 0
+                    idx = (idx % #list) + 1
+                    current = list[idx]
+                    B.Text = text .. ": " .. tostring(current)
+                    if cb then cb(current) end
+                end)
+            end
+
+            -- BUTTON
+            function Section:AddButton(text, cb)
+                local B = Instance.new("TextButton", Holder)
+                B.Size = UDim2.new(1, -16, 0, 30)
+                B.Text = text
+                B.Font = Enum.Font.GothamBold
+                B.TextSize = 13
+                B.BackgroundColor3 = Color3.fromRGB(25,25,30)
+                B.TextColor3 = Color3.new(1,1,1)
+                Instance.new("UICorner", B)
+                B.MouseButton1Click:Connect(cb)
             end
 
             return Section
@@ -242,7 +317,11 @@ function Library:CreateWindow(title)
         return Tab
     end
 
+    function Window:Destroy()
+        Gui:Destroy()
+    end
+
     return Window
 end
 
-return Library
+return NEVERLOSE
