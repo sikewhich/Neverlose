@@ -8,7 +8,6 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -52,7 +51,6 @@ local hitboxSize = 5
 local hitboxTrans = 1
 
 local triggerBot = false
-local lastShot = 0
 local silentAim = false
 local autoShoot = false
 
@@ -71,17 +69,17 @@ fovDraw.Filled = false
 
 local function clearESP(plr)
     if espObjs[plr] then
-        espObjs[plr].Box:Remove()
-        espObjs[plr].Name:Remove()
-        espObjs[plr].Health:Remove()
+        if espObjs[plr].Box then espObjs[plr].Box:Remove() end
+        if espObjs[plr].Name then espObjs[plr].Name:Remove() end
+        if espObjs[plr].Health then espObjs[plr].Health:Remove() end
         espObjs[plr] = nil
     end
     if tracerObjs[plr] then
-        tracerObjs[plr].Line:Remove()
+        if tracerObjs[plr].Line then tracerObjs[plr].Line:Remove() end
         tracerObjs[plr] = nil
     end
     if chamObjs[plr] then
-        chamObjs[plr].Enabled = false
+        if chamObjs[plr] then chamObjs[plr].Enabled = false end
         chamObjs[plr] = nil
     end
 end
@@ -357,6 +355,30 @@ local function panic()
     Window:Destroy()
 end
 
+local function killAll()
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+    
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local hum = v.Character:FindFirstChild("Humanoid")
+            if hum and hum.Health > 0 then
+                local root = v.Character.HumanoidRootPart
+                
+                root.CFrame = myRoot.CFrame * CFrame.new(0, 0, -3)
+                root.Transparency = 1
+                for _, part in pairs(v.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then part.Transparency = 1 end
+                end
+                
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+                task.wait(0.1)
+            end
+        end
+    end
+end
+
 connection = RunService.RenderStepped:Connect(function()
     Camera.FieldOfView = plrFov
     
@@ -369,17 +391,19 @@ connection = RunService.RenderStepped:Connect(function()
     end
 
     if triggerBot then
-        local currentTime = tick()
-        if currentTime - lastShot >= 1.0 then
-            for _, v in pairs(Players:GetPlayers()) do
-                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("Humanoid") then
-                    local hum = v.Character.Humanoid
-                    if hum and hum.Health > 0 then
-                        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
-                        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
-                        lastShot = currentTime
-                        break
-                    end
+        local ray = Camera:ViewportPointToRay(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        local rp = RaycastParams.new()
+        rp.FilterDescendantsInstances = {LocalPlayer.Character}
+        rp.FilterType = Enum.RaycastFilterType.Exclude
+        local res = workspace:Raycast(ray.Origin, ray.Direction * 1000, rp)
+        
+        if res then
+            local char = res.Instance:FindFirstAncestorOfClass("Model")
+            if char then
+                local plr = Players:GetPlayerFromCharacter(char)
+                if plr and plr ~= LocalPlayer then
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
                 end
             end
         end
@@ -448,8 +472,9 @@ combatMain:AddToggle('Enabled', false, function(v) hitboxOn = v end)
 combatMain:AddSlider('Size', 1, 50, 10, function(v) hitboxSize = v end)
 combatMain:AddSlider('Transparency', 0, 1, 1, function(v) hitboxTrans = v end)
 
-local combatBot = tabCombat:AddSection('Trigger Bot', "right")
-combatBot:AddToggle('Shoot All (1s Delay)', false, function(v) triggerBot = v end)
+local combatBot = tabCombat:AddSection('TriggerBot', "right")
+combatBot:AddToggle('Enabled', false, function(v) triggerBot = v end)
+combatBot:AddButton("Kill All", function() killAll() end)
 
 Window:AddTabLabel('Visuals')
 local tabVis = Window:AddTab('Visuals', 'user')
