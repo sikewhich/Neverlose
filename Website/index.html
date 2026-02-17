@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neverlose.gg - Roblox Script Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-secondary: #0a0a0a;
+      --fg: #e4e4e7;
+      --muted: #a1a1aa;
+      --accent: #ff1a1a;
+      --accent-glow: #ff0000;
+      --accent-dim: rgba(255, 26, 26, 0.1);
+      --card: #0f0f0f;
+      --border: #1f1f1f;
+      --syntax-string: #ff6b9d;
+      --syntax-func: #ff3333;
+      --syntax-method: #ffa500;
+      --syntax-comment: #555555;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Animated grid background */
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 26, 26, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 26, 26, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Glow orbs */
+    .glow-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-orb-1 {
+      width: 400px;
+      height: 400px;
+      background: var(--accent);
+      top: -100px;
+      right: -100px;
+      animation: float1 15s ease-in-out infinite;
+    }
+
+    .glow-orb-2 {
+      width: 300px;
+      height: 300px;
+      background: #8b0000;
+      bottom: -50px;
+      left: -50px;
+      animation: float2 18s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-50px, 50px) scale(1.1); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, -30px) scale(0.9); }
+    }
+
+    /* Tab styles */
+    .tab-btn {
+      position: relative;
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tab-btn:hover {
+      color: var(--fg);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+    }
+
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .tab-btn.active::after {
+      width: 100%;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #050505;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .code-header {
+      background: #0a0a0a;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .code-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .code-content {
+      padding: 20px;
+      overflow-x: auto;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Syntax colors */
+    .syn-func { color: var(--syntax-func); }
+    .syn-string { color: var(--syntax-string); }
+    .syn-method { color: var(--syntax-method); }
+    .syn-comment { color: var(--syntax-comment); font-style: italic; }
+    .syn-punct { color: var(--fg); }
+
+    /* Copy button */
+    .copy-btn {
+      background: rgba(255, 26, 26, 0.1);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .copy-btn.copied {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* Tab content */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
+    .game-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .game-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 40px rgba(255, 0, 0, 0.1);
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-badge.unsupported {
+      background: rgba(255, 26, 26, 0.1);
+      color: #ff4444;
+      border: 1px solid rgba(255, 26, 26, 0.3);
+    }
+
+    /* Entrance animations */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    .fade-up-delay-1 { animation-delay: 0.1s; }
+    .fade-up-delay-2 { animation-delay: 0.2s; }
+    .fade-up-delay-3 { animation-delay: 0.3s; }
+    .fade-up-delay-4 { animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Logo pulse */
+    .logo-glow {
+      text-shadow: 0 0 20px var(--accent-glow);
+      animation: logoPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes logoPulse {
+      0%, 100% { text-shadow: 0 0 20px var(--accent-glow); }
+      50% { text-shadow: 0 0 40px var(--accent-glow), 0 0 60px var(--accent-glow); }
+    }
+
+    /* Particles */
+    #particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+
+    /* Focus states */
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background elements -->
+  <div class="grid-bg"></div>
+  <div class="glow-orb glow-orb-1"></div>
+  <div class="glow-orb glow-orb-2"></div>
+  <canvas id="particles"></canvas>
+
+  <!-- Main content -->
+  <div class="relative z-10 min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-zinc-800/50 backdrop-blur-sm bg-black/40">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3 fade-up">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#ff1a1a] to-[#8b0000] flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <span class="text-xl font-bold logo-glow" style="color: var(--accent)">Neverlose.gg</span>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 fade-up fade-up-delay-1">
+          <a href="https://discord.gg/nPJmaJ4UjS" target="_blank" rel="noopener noreferrer" class="text-sm text-zinc-400 hover:text-red-500 transition-colors">Discord</a>
+          <a href="https://github.com/sikewhich/Neverlose" target="_blank" rel="noopener noreferrer" class="text-sm text-zinc-400 hover:text-red-500 transition-colors">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="py-16 md:py-24 px-6">
+      <div class="max-w-6xl mx-auto text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-4 fade-up fade-up-delay-1" style="color: #ff3333;">
+          Premium <span style="color: #ffffff">Roblox</span> Scripts
+        </h1>
+        <p class="text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto mb-8 fade-up fade-up-delay-2">
+          Powerful, optimized, and constantly updated script hub for your favorite Roblox games.
+        </p>
+        <div class="flex items-center justify-center gap-4 fade-up fade-up-delay-3">
+          <span class="status-badge unsupported">
+            <span class="w-2 h-2 rounded-full bg-current"></span>
+            Nothing Supported Yet
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabs Section -->
+    <section class="px-6 pb-24">
+      <div class="max-w-4xl mx-auto">
+        <!-- Tab Navigation -->
+        <div class="flex items-center justify-center border-b border-zinc-800 mb-8 fade-up fade-up-delay-3">
+          <button class="tab-btn active" data-tab="loader" aria-selected="true">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+              </svg>
+              Loader
+            </span>
+          </button>
+          <button class="tab-btn" data-tab="games" aria-selected="false">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+              </svg>
+              Games
+            </span>
+          </button>
+          <button class="tab-btn" data-tab="script" aria-selected="false">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+              Script
+            </span>
+          </button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="fade-up fade-up-delay-4">
+          <!-- Loader Tab -->
+          <div id="loader-content" class="tab-content active">
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-dots">
+                  <div class="code-dot" style="background: #ff5f57;"></div>
+                  <div class="code-dot" style="background: #ffbd2e;"></div>
+                  <div class="code-dot" style="background: #28c840;"></div>
+                </div>
+                <button class="copy-btn" id="copy-btn" aria-label="Copy code">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                  <span id="copy-text">Copy</span>
+                </button>
+              </div>
+              <div class="code-content font-mono">
+                <pre id="code-display"></pre>
+              </div>
+            </div>
+            <p class="text-sm text-zinc-600 mt-4 text-center">
+              Execute this code in your script executor to load Neverlose
+            </p>
+          </div>
+
+          <!-- Games Tab -->
+          <div id="games-content" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="game-card opacity-50">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold text-red-500">Arsenal</h3>
+                  <span class="status-badge unsupported text-xs">Unsupported</span>
+                </div>
+                <p class="text-sm text-zinc-600">Coming soon...</p>
+              </div>
+              <div class="game-card opacity-50">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold text-red-500">Blox Fruits</h3>
+                  <span class="status-badge unsupported text-xs">Unsupported</span>
+                </div>
+                <p class="text-sm text-zinc-600">Coming soon...</p>
+              </div>
+              <div class="game-card opacity-50">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold text-red-500">Pet Simulator X</h3>
+                  <span class="status-badge unsupported text-xs">Unsupported</span>
+                </div>
+                <p class="text-sm text-zinc-600">Coming soon...</p>
+              </div>
+              <div class="game-card opacity-50">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold text-red-500">Murder Mystery 2</h3>
+                  <span class="status-badge unsupported text-xs">Unsupported</span>
+                </div>
+                <p class="text-sm text-zinc-600">Coming soon...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Script Tab -->
+          <div id="script-content" class="tab-content">
+            <div class="text-center py-12">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800">
+                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold mb-2 text-red-500">No Scripts Available</h3>
+              <p class="text-zinc-600">Scripts will appear here once games are supported.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-zinc-800/50 py-8 px-6">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-zinc-600">2025 Neverlose.gg - For educational purposes only</p>
+        <div class="flex items-center gap-4">
+          <a href="https://discord.gg/nPJmaJ4UjS" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-red-500 transition-colors" aria-label="Discord">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+          </a>
+          <a href="https://github.com/sikewhich/Neverlose" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-red-500 transition-colors" aria-label="GitHub">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Initialize particles
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let animationId = null;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function createParticle() {
+      return {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 1.5 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.3,
+        speedY: (Math.random() - 0.5) * 0.3,
+        opacity: Math.random() * 0.3 + 0.1
+      };
+    }
+
+    function initParticles() {
+      particles = [];
+      const count = Math.min(60, Math.floor((canvas.width * canvas.height) / 20000));
+      for (let i = 0; i < count; i++) {
+        particles.push(createParticle());
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach(p => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+        
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 26, 26, ${p.opacity})`;
+        ctx.fill();
+      });
+      
+      // Draw connections
+      particles.forEach((p1, i) => {
+        particles.slice(i + 1).forEach(p2 => {
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(255, 0, 0, ${0.05 * (1 - dist / 100)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        });
+      });
+      
+      animationId = requestAnimationFrame(animateParticles);
+    }
+
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    
+    function handleMotionPreference() {
+      if (prefersReducedMotion.matches) {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      } else {
+        resizeCanvas();
+        initParticles();
+        animateParticles();
+      }
+    }
+
+    resizeCanvas();
+    initParticles();
+    handleMotionPreference();
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      initParticles();
+    });
+    
+    prefersReducedMotion.addEventListener('change', handleMotionPreference);
+
+    // Tab functionality
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = {
+      loader: document.getElementById('loader-content'),
+      games: document.getElementById('games-content'),
+      script: document.getElementById('script-content')
+    };
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        
+        // Update active states
+        tabBtns.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        
+        // Show correct content
+        Object.values(tabContents).forEach(content => {
+          content.classList.remove('active');
+        });
+        tabContents[tab].classList.add('active');
+      });
+    });
+
+    // Syntax highlighting
+    const loaderCode = `loadstring(game:HttpGet("https://raw.githubusercontent.com/sikewhich/Neverlose/refs/heads/main/Loader/loader.main"))()`;
+
+    function highlightLua(code) {
+      // Escape HTML first
+      let escaped = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      
+      // Apply syntax highlighting
+      return escaped
+        // Strings (must be first to avoid conflicts)
+        .replace(/(".*?")/g, '<span class="syn-string">$1</span>')
+        // Functions
+        .replace(/\b(loadstring)\b/g, '<span class="syn-func">$1</span>')
+        // Methods
+        .replace(/\b(HttpGet)\b/g, '<span class="syn-method">$1</span>')
+        // game: pseudo-method
+        .replace(/\b(game):/g, '<span class="syn-func">$1</span>:');
+    }
+
+    const codeDisplay = document.getElementById('code-display');
+    codeDisplay.innerHTML = highlightLua(loaderCode);
+
+    // Copy functionality
+    const copyBtn = document.getElementById('copy-btn');
+    const copyText = document.getElementById('copy-text');
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(loaderCode);
+        copyBtn.classList.add('copied');
+        copyText.textContent = 'Copied!';
+        
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyText.textContent = 'Copy';
+        }, 2000);
+      } catch (err) {
+        copyText.textContent = 'Failed';
+        setTimeout(() => {
+          copyText.textContent = 'Copy';
+        }, 2000);
+      }
+    });
+
+    // Hover effect on game cards
+    document.querySelectorAll('.game-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        card.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255, 0, 0, 0.05), #0f0f0f)`;
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.background = '#0f0f0f';
+      });
+    });
+  </script>
+</body>
+</html>
